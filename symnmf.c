@@ -4,7 +4,7 @@
 
 
 
-double** zero_mat(int n, int d)
+double** create_zero_mat(int n, int d)
 {
     /* return a zero matrix order n x d */
     double **mat; 
@@ -34,7 +34,7 @@ void freeMat(double **mat, int n)
     free(mat);
 }
 
-double** A_mat(double **points, int n, int d)
+double** create_A_mat(double **points, int n, int d)
 {
     /* return A - Simlarity matrice  */
     double **A_mat;
@@ -43,7 +43,7 @@ double** A_mat(double **points, int n, int d)
     int i,j, k;
     double sum = 0;
 
-    A_mat = zero_mat(n,n);
+    A_mat = create_zero_mat(n,n);
 
     if (NULL == A_mat)
     {
@@ -65,21 +65,21 @@ double** A_mat(double **points, int n, int d)
                     sum += delta;
                 }
                 value = ((-1) * sum) / 2;
-                A_mat[i][j] = exp(temp_val);
+                A_mat[i][j] = exp(value);
             }
         }
     }
     return A_mat;
 }
 
-double** D_mat(double **A_mat, int n)
+double** create_D_mat(double **A_mat, int n)
 {
     /* return D - Diagonal Degree Matrix */
     double **D_mat;
     double sum;
     int i ,j;
 
-    D_mat = zero_mat(n, n);
+    D_mat = create_zero_mat(n, n);
 
     if (NULL == D_mat)
     {
@@ -106,7 +106,7 @@ double** D_mat_normalized(double **A_mat, int n)
     double sum;
     int i ,j;
 
-    D_mat = zero_mat(n, n);
+    D_mat = create_zero_mat(n, n);
 
     if (NULL == D_mat)
     {
@@ -135,7 +135,7 @@ double** mat_multipication(double **matA, double **matB, int n)
     int i;
     double sum;
 
-    mult = zero_mat(n,n);
+    res = zero_mat(n,n);
     for (i = 0; i < n; i++){
         for (j = 0; j < n; j++)
         {
@@ -156,13 +156,13 @@ double** W_mat_laplacian(double **points, int n, int d)
     double **A_mat, **D_mat;
     double **first_multipication, **second_multipication;
 
-    A_mat = A_mat(points, n, d);
+    A_mat = create_A_mat(points, n, d);
     if (NULL == A_mat)
     {
         return NULL;
     }
     
-    D_mat = D_mat_normalized(W_mat, n);
+    D_mat = D_mat_normalized(A_mat, n);
     if (NULL == D_mat )
     {
         return NULL;
@@ -173,8 +173,8 @@ double** W_mat_laplacian(double **points, int n, int d)
     {
         return NULL;
     }
-    second_mult = mat_mult(first_multipication, D_mat, n);
-    if (NULL == second_mult )
+    second_multipication = mat_mult(first_multipication, D_mat, n);
+    if (NULL == second_multipication )
     {
         return NULL;
     }
@@ -191,7 +191,7 @@ double** transpose(double **mat, int n)
     double **mat_T;
     double temp;
     int i,j;
-    mat_T = zero_mat(n, n);
+    mat_T = create_zero_mat(n, n);
     if (NULL == mat_T)
     {
         return NULL;
@@ -224,6 +224,6 @@ double avg_mat_entries(double **W_mat, int n)
 
         }
     }
-    m = m / (n * n)
+    m = m / (n * n);
 
 }
