@@ -226,4 +226,27 @@ double avg_mat_entries(double **W_mat, int n)
     }
     m = m / (n * n);
 
+    return m;
+}
+
+double** create_H_Mat(double **W_mat, int n ,int k)
+{   
+    double **H_mat;
+    int i,j,endpoint,temp;
+    double m; 
+    m=avg_mat_entries( W_mat , n );
+    endpoint = 2*sqrt(m\k);
+    
+    H_mat =create_zero_mat(n,k);
+    for(i = 0; i < n; i++)
+    {
+        for( j = 0; j < n; j++)
+        {
+            temp=( rand() ) % (endpoint+1); /* get number in range [0,endpoint]*/
+            H_mat[i][j] = temp;
+
+        }
+    }
+
+    return H_mat;
 }
