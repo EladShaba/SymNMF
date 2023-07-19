@@ -14,7 +14,7 @@ $X = x_1, x_2, . . . , x_N \in R^d$
 
 the algorithm is:
 
-![Figure1](https://github.com/e7shaba/Symmetric-NMF/blob/main/SymNMF%20algorithm.jpg)
+![Figure1](https://github.com/EladShaba/SymmNMF/blob/main/SymNMF%20algorithm.jpg)
 
 For a more complete understanding of the algorithm, we highly recommend reading the original paper, that goes into much more detalis and possible ways to implement the algorithm [research paper by Da Kuang, Chris Ding and Haesun Park](https://faculty.cc.gatech.edu/~hpark/papers/DaDingParkSDM12.pdf).
 
