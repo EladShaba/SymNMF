@@ -1,4 +1,4 @@
-# Clustering using Symmetric Non-negative Matrix Factorization (syNMF)
+# Clustering using Symmetric Non-negative Matrix Factorization (symNMF)
 
 
 ## Introduction 
