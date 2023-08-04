@@ -5,8 +5,7 @@
 
 
 double** create_zero_mat(int n, int d)
-{
-    /* return a zero matrix order n x d */
+{/* return a zero matrix order n x d */
     double **mat; 
     int i;
     mat = (double**) calloc(n, sizeof(double*));
@@ -26,7 +25,7 @@ double** create_zero_mat(int n, int d)
 }
 
 void freeMat(double **mat, int n)
-{
+{ /*free memory of matrice*/
     int i;
     for(i = 0; i < n; i++){
         free(mat[i]);
@@ -34,9 +33,27 @@ void freeMat(double **mat, int n)
     free(mat);
 }
 
+double** arr_cast_mat(double *arr, int n, int d)
+{ /*Take an array and transorm it into matrice*/
+    int i,j;
+    double **mat;
+    mat = create_zero_mat(n,d);
+    if (mat == NULL)
+    {
+        printf("An Error Has Occurred");
+        return NULL;
+    }
+    for(i = 0; i < n ;i++)
+    {
+        for(j = 0; j < d; j++){
+            mat[i][j] = arr[i * d + j];
+        }
+    }
+    return mat;
+}
+
 double** create_A_mat(double **points, int n, int d)
-{
-    /* return A - Simlarity matrice  */
+{/* return A - Simlarity matrice  */
     double **A_mat;
     double delta = 0;
     double value;
@@ -73,8 +90,7 @@ double** create_A_mat(double **points, int n, int d)
 }
 
 double** create_D_mat(double **A_mat, int n)
-{
-    /* return D - Diagonal Degree Matrix */
+{/* return D - Diagonal Degree Matrix */
     double **D_mat;
     double sum;
     int i ,j;
@@ -100,8 +116,7 @@ double** create_D_mat(double **A_mat, int n)
 }
 
 double** D_mat_normalized(double **A_mat, int n)
-{
-    /* return D -  Diagonal Degree Matrix ^(-1/2) */
+{/* return D -  Diagonal Degree Matrix ^(-1/2) */
     double **D_mat;
     double sum;
     int i ,j;
@@ -127,8 +142,7 @@ double** D_mat_normalized(double **A_mat, int n)
 }
 
 double** mat_multipication(double **matA, double **matB, int n)
-{
-    
+{   /* return an array that is the result of A*B matrices */ 
     double **res;
     int j;
     int k;
@@ -150,9 +164,9 @@ double** mat_multipication(double **matA, double **matB, int n)
     return res;
 }
 
-double** W_mat_laplacian(double **points, int n, int d)
+double** create_W_mat(double **points, int n, int d)
 {
-    /* return W - the normalized similarity matrix - D^(-1/2)AD^(-1/2) */
+    /* return W - the normalized similarity matrix - W = D^(-1/2) * A * D^(-1/2) */
     double **A_mat, **D_mat;
     double **first_multipication, **second_multipication;
 
@@ -185,21 +199,38 @@ double** W_mat_laplacian(double **points, int n, int d)
     return second_multipication;
 }
 
-double** transpose(double **mat, int n)
+
+void printm(double **mat, int n, int d)
 {
-    /* return mat^t - the transpose of the input matrice */
+    /* prints matrice  */
+    int i,j;
+    for ( i = 0; i < n; i++)
+    {
+        for ( j = 0; j < d; j++)
+        {
+            printf("%.4f", mat[i][j]);
+            if (j < (d - 1))
+            {
+                printf(",");
+            }
+            else{
+                printf("\n");
+            }
+        }
+    }
+}
+
+double** transpose(double **mat, int n){
+    /* return transpose of matrice */
     double **mat_T;
     double temp;
     int i,j;
     mat_T = create_zero_mat(n, n);
-    if (NULL == mat_T)
-    {
+    if (mat_T == NULL){
         return NULL;
     }
-    for(i = 0; i < n; i++)
-    {
-        for( j = 0; j < n; j++)
-        {
+    for(i = 0; i < n; i++){
+        for( j = 0; j < n; j++){
             temp = mat[i][j];
             mat_T[j][i] = temp;
         }
@@ -207,46 +238,103 @@ double** transpose(double **mat, int n)
     return mat_T;
 }
 
-double avg_mat_entries(double **W_mat, int n)
-{
-    /* return m - the average value of all entries of W */
-    int i,j;
-    double m;
-    if(NULL == n)
+void get_points_input(FILE *ifp, double* points_arr)
+{/* points from the file to an array */
+    double point = 0.0;
+    int i=0;
+    while (fscanf(ifp, "%lf,", &point) != EOF)
     {
-        reutrn NULL;
+        points_arr[i] = point;
+        i++;
     }
-    for(i = 0; i < n; i++)
-    {
-        for( j = 0; j < n; j++)
-        {
-            m += W_mat[i][j];
-
-        }
-    }
-    m = m / (n * n);
-
-    return m;
 }
 
-double** create_H_Mat(double **W_mat, int n ,int k)
-{   
-    double **H_mat;
-    int i,j,endpoint,temp;
-    double m; 
-    m=avg_mat_entries( W_mat , n );
-    endpoint = 2*sqrt(m\k);
-    
-    H_mat =create_zero_mat(n,k);
-    for(i = 0; i < n; i++)
-    {
-        for( j = 0; j < n; j++)
-        {
-            temp=( rand() ) % (endpoint+1); /* get number in range [0,endpoint]*/
-            H_mat[i][j] = temp;
+int main(int argc, char** argv){
+    /* if there are command-line arguments, they are interpered as filenames, and processed in order */
+    FILE *ifp; 
+    int d; 
+    int n;  
+    char *filename;
+    double *data_points;
+    double **points;
+    double **A_mat, **D_mat, **W_mat;
 
-        }
+    filename = argv[2]
+    ifp = fopen(filename,"r");
+    if (ifp == NULL){
+        printf("An Error Has Occurred");
+        return 1;
     }
 
-    return H_mat;
+    /* check if function ok */
+    n=0;
+    d = 1;
+    while ((charCount = getchar()) != EOF) /* switch with fget? */
+    {
+        if (charCount == '\n') {
+            n = n+1;
+        } 
+        else{
+            if (n == 0 && charCount == ',') 
+            {
+            d = d+1;
+            } 
+        }
+    }
+    rewind(stdin); /* reset pointer*/
+
+    data_points = calloc(n*d, sizeof(double));
+    if (NULL == data_points){
+        printf("An Error Has Occurred");
+        return 1;
+    }
+    get_points_input(ifp,data_points);
+    fclose(ifp);
+
+    points = arr_cast_mat(data_points,n,d);
+    if (points == NULL){
+        printf("An Error Has Occurred");
+        return 1;
+    }
+
+    if (strcmp(argv[1],"sym") == 0)
+    {
+        A_mat = create_A_mat(points, n, d);
+        if (NULL == A_mat)
+        {
+            printf("An Error Has Occurred");
+            return 1;
+        }
+        printm(A_mat, n, n);
+        free_mat(A_mat, n);
+        free_mat(points,n);
+    }
+
+    if (strcmp(argv[1],"ddg") == 0)
+    {
+        D_mat = create_D_mat(points, n, d);
+        if (NULL == D_mat)
+        {
+            printf("An Error Has Occurred");
+            return 1;
+        }
+        printm(D_mat, n, n);
+        free_mat(D_mat, n);
+        free_mat(points,n);
+    }
+
+    if (strcmp(argv[1],"norm") == 0)
+    {
+        W_mat = create_W_mat(points, n, d);
+        if (NULL == W_mat)
+        {
+            printf("An Error Has Occurred");
+            return 1;
+        }
+        printm(W_mat, n, n);
+        free_mat(W_mat, n);
+        free_mat(points,n);
+    }
+    free(data_points);
+    return 0;
 }
