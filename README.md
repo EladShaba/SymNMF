@@ -25,7 +25,7 @@ H^{i+1}_{ij} \leftarrow H^{i}_{ij} * (\frac{1}{2} + \frac{1}{2} * \frac{((WH^{i}
 ```
 We update H using the above rule untill 300 iterations (arbitrary limit) or untill we have convergences of the value: $|| H^{(i+1)} -H^{(i)} ||_{F}^{2} < \epsilon$
 
-From the final H, we can derive a clustering solution ** need to fill**
+From the final H, we can derive a clustering solution **need to fill**
 
 For a more complete understanding of the algorithm, we highly recommend reading the original paper, that goes into much more detalis and possible ways to implement the algorithm [research paper by Da Kuang, Chris Ding and Haesun Park](https://faculty.cc.gatech.edu/~hpark/papers/DaDingParkSDM12.pdf).
 
