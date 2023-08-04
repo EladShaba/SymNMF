@@ -23,7 +23,7 @@ We mark this initialized H as $H^{0}$, and we iteratively update $H^{i}$:
 ```math
 H^{i+1}_{ij} \leftarrow H^{i}_{ij} * (\frac{1}{2} + \frac{1}{2} * \frac{((WH^{i})_{ij})}{(H^{i} (H^{i})^{T} H^{i})_{ij}})
 ```
-We update H using the above rule untill 300 iterations (arbitrary limit) or untill we have convergences of the value: $\left \| H^{(i+1)} -H^{(i)} \right \|_{F}^{2} < \epsilon$
+We update H using the above rule untill 300 iterations (arbitrary limit) or untill we have convergences of the value: $\left \|| H^{(i+1)} -H^{(i)} \right \||_{F}^{2} < \epsilon$
 For a more complete understanding of the algorithm, we highly recommend reading the original paper, that goes into much more detalis and possible ways to implement the algorithm [research paper by Da Kuang, Chris Ding and Haesun Park](https://faculty.cc.gatech.edu/~hpark/papers/DaDingParkSDM12.pdf).
 
 ## Summary of the files
