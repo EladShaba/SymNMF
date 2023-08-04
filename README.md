@@ -18,9 +18,9 @@ the algorithm is:
 
 Calculation of H:
 First we randomly initialize H using the values from the interval [0, 2 ∗ sqrt(avg(W) / k)].
-We mark this initialized H as $H^(0)$, and we iteratively update $H^i$:
+We mark this initialized H as $H^0$, and we iteratively update $H^i$:
 
-$H^(i+1)_(ij) <-- H^(i)_(ij) * (1/2 + 1/2 * ((WH^(i))_ij) /(H^(i) (H^(i))^T H^(i))_ij )$ 
+$$H^(i+1)_(ij) <-- H^(i)_(ij) * (1/2 + 1/2 * ((WH^(i))_ij) /(H^(i) (H^(i))^T H^(i))_ij )$$
 
 For a more complete understanding of the algorithm, we highly recommend reading the original paper, that goes into much more detalis and possible ways to implement the algorithm [research paper by Da Kuang, Chris Ding and Haesun Park](https://faculty.cc.gatech.edu/~hpark/papers/DaDingParkSDM12.pdf).
 
