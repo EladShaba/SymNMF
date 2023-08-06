@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import pandas as pd
-import  symnmf as symnmf
+import symnmf as symnmf
 import math #check if allowed
 
 def print_mat(mat_list):
@@ -26,7 +26,7 @@ def CMD_input():#check if we assume valid input
     goal = sys.argv[2]
     file_name = sys.argv[3]
 
-    return k, goal , file_name
+    return k, goal, file_name
 
 if __name__ == "__main__":
     np.random.seed(0)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
             sys.exit(1)
         m = avg_mat_entries(W_mat,n)
         endpoint = 2 * math.sqrt(m/k)
-        H_mat = np.random.uniform(0,endpoint,(n,n)) #randomly intiliaze H^0
+        H_mat = np.random.uniform(0,endpoint,(n,k)) #randomly intiliaze H^0
         #calculate H^i until converge in C
-        #symnmf(H,X)
+        symnmf.updateH(H_mat, W_mat, n, k, eps, iter)
 
