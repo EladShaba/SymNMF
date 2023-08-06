@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-
+#include "symnmf.h"
 
 
 double** create_zero_mat(int n, int d)
@@ -149,7 +149,7 @@ double** mat_multipication(double **matA, double **matB, int n)
     int i;
     double sum;
 
-    res = zero_mat(n,n);
+    res = create_zero_mat(n,n);
     for (i = 0; i < n; i++){
         for (j = 0; j < n; j++)
         {
@@ -182,12 +182,12 @@ double** create_W_mat(double **points, int n, int d)
         return NULL;
     }
 
-    first_multipication = mat_mult(D_mat, A_mat, n);
+    first_multipication = mat_multipication(D_mat, A_mat, n);
     if (NULL == first_multipication)
     {
         return NULL;
     }
-    second_multipication = mat_mult(first_multipication, D_mat, n);
+    second_multipication = mat_multipication(first_multipication, D_mat, n);
     if (NULL == second_multipication )
     {
         return NULL;
@@ -223,7 +223,6 @@ void printm(double **mat, int n, int d)
 double** transpose(double **mat, int n){
     /* return transpose of matrice */
     double **mat_T;
-    double temp;
     int i,j;
     mat_T = create_zero_mat(n, n);
     if (mat_T == NULL){
@@ -231,22 +230,57 @@ double** transpose(double **mat, int n){
     }
     for(i = 0; i < n; i++){
         for( j = 0; j < n; j++){
-            temp = mat[i][j];
-            mat_T[j][i] = temp;
+            mat_T[j][i] = mat[i][j];
         }
     }
     return mat_T;
+}
+
+double frobenius_norm(double **mat, int n, int k){
+    /* return frobenius norm of matrice */
+    int i,j;
+    double norm = 0;
+    for(i = 0; i < n; i++){
+        for( j = 0; j < k; j++){
+            norm += pow(mat[i][j], 2);
+        }
+    }
+    return norm;
 }
 
 void get_points_input(FILE *ifp, double* points_arr)
 {/* points from the file to an array */
     double point = 0.0;
     int i=0;
-    while (fscanf(ifp, "%lf,", &point) != EOF)
+    while (fscanf_s(ifp, "%lf,", &point) != EOF)
     {
         points_arr[i] = point;
         i++;
     }
+}
+double** update_H_mat(double **matH, double **matW, int n, int k, double epsilon, int iter){
+    double **new_H, **numerator_H, **denominator_H, **mat_H_T, **frobenius_mat;
+    int i,j;
+    double norm;
+    
+    numerator_H = mat_multipication(matW, matH, n);
+    mat_H_T = transpose(matH, n);
+    denominator_H = mat_multipication(matH, mat_multipication(mat_H_T, matH, n), n);
+    new_H = create_zero_mat(n, k);
+    frobenius_mat = create_zero_mat(n, k);
+
+    for (i = 0; i < n; i++){
+        for (j = 0; j < k; j++){
+            new_H[i][j] = matH[i][j] * (0.5 + ((0.5 * numerator_H[i][j]) / denominator_H[i][j]));
+            frobenius_mat[i][j] = new_H[i][j] - matH[i][j];
+        }
+    }
+
+    norm = frobenius_norm(frobenius_mat, n, k);
+    if (iter == 0 || norm < epsilon){
+        return matH;
+    }
+    return update_H_mat(new_H, matW, n, k, epsilon, iter);
 }
 
 int main(int argc, char** argv){
@@ -258,10 +292,12 @@ int main(int argc, char** argv){
     double *data_points;
     double **points;
     double **A_mat, **D_mat, **W_mat;
+    char charCount;
+    int err;
 
-    filename = argv[2]
-    ifp = fopen(filename,"r");
-    if (ifp == NULL){
+    filename = argv[2];
+    err = fopen_s(&ifp, filename, "r");
+    if (err != 0){
         printf("An Error Has Occurred");
         return 1;
     }
@@ -306,21 +342,21 @@ int main(int argc, char** argv){
             return 1;
         }
         printm(A_mat, n, n);
-        free_mat(A_mat, n);
-        free_mat(points,n);
+        freeMat(A_mat, n);
+        freeMat(points,n);
     }
 
     if (strcmp(argv[1],"ddg") == 0)
     {
-        D_mat = create_D_mat(points, n, d);
+        D_mat = create_D_mat(points, n);
         if (NULL == D_mat)
         {
             printf("An Error Has Occurred");
             return 1;
         }
         printm(D_mat, n, n);
-        free_mat(D_mat, n);
-        free_mat(points,n);
+        freeMat(D_mat, n);
+        freeMat(points,n);
     }
 
     if (strcmp(argv[1],"norm") == 0)
@@ -332,8 +368,21 @@ int main(int argc, char** argv){
             return 1;
         }
         printm(W_mat, n, n);
-        free_mat(W_mat, n);
-        free_mat(points,n);
+        freeMat(W_mat, n);
+        freeMat(points,n);
+    }
+
+    if (strcmp(argv[1],"H") == 0)
+    {
+        W_mat = create_W_mat(points, n, d);
+        if (NULL == W_mat)
+        {
+            printf("An Error Has Occurred");
+            return 1;
+        }
+        printm(W_mat, n, n);
+        freeMat(W_mat, n);
+        freeMat(points,n);
     }
     free(data_points);
     return 0;
