@@ -9,18 +9,24 @@ PyObject* C_to_Py_mat(double **c_mat, int n, int d){
     PyObject *py_matrice, *row;
     int i, j;
     
-    if (c_mat == NULL)
+    if (c_mat == NULL){
+        printf("problem with c mat\n");
         return NULL;
+    }
 
     /*parse a n x d C matrice to a n x d python matrice*/
     py_matrice = PyList_New(n); 
-    if (py_matrice == NULL)
+    if (py_matrice == NULL){
+        printf("problem in creating python list 1\n");
         return NULL;
+    }
 
     for (i = 0; i < n; i++){
         row = PyList_New(d);
-        if (row == NULL)
+        if (row == NULL){
+            printf("problem in creating python list 2\n");
             return NULL;
+        }
         for (j = 0; j < d; j++)
             PyList_SetItem(row, j, PyFloat_FromDouble(c_mat[i][j]));
         PyList_SetItem(py_matrice, i, row);
@@ -37,13 +43,17 @@ double** Py_to_C_mat(PyObject *py_data, int n, int d){
 
     /*parse a n x d python matrice to a n x d C matrice*/ 
     C_mat = malloc(n * sizeof(double*));
-    if (C_mat == NULL)
+    if (C_mat == NULL){
+        printf("problem in creating c list 1\n");
         return NULL;
+    }
 
     for (i = 0; i < n; i++) {
         C_mat[i] = malloc(d * sizeof(double));
-        if (C_mat[i] == NULL)
-            return NULL;    
+        if (C_mat[i] == NULL){
+            printf("problem in creating c list 2\n");
+            return NULL;
+        }
         py_row = PyList_GetItem(py_data, i);
         for (j = 0; j < d; j++)
             C_mat[i][j] = PyFloat_AsDouble(PyList_GetItem(py_row, j));
@@ -127,26 +137,19 @@ static PyObject* norm(PyObject *self, PyObject *args){
 static PyObject* updateH(PyObject *self, PyObject *args){
     PyObject *Py_H, *Py_W, *res;
     int n, k, iter;
-    double *C_arr_H, *C_arr_W;
     double **H_mat, **W_mat, eps;
     
-    if (!PyArg_ParseTuple(args, "O|O|i|i|d|i", &Py_H, &Py_W, &n, &k, &eps, &iter)){
+    if (!PyArg_ParseTuple(args, "O|O|i|i|d|i", &Py_H, &Py_W, &n, &k, &eps, &iter))
         return NULL;
-    }
-    if (!PyList_Check(Py_H) || !PyList_Check(Py_W)){
+    if (!PyList_Check(Py_H) || !PyList_Check(Py_W))
         return NULL;
-    }
 
     H_mat = Py_to_C_mat(Py_H, n, k);
     W_mat = Py_to_C_mat(Py_W, n, n);
     H_mat = update_H_mat(H_mat, W_mat, n, k, eps, iter);
     res = C_to_Py_mat(H_mat, n, k);
-    
+
     /*free all memory*/
-    if (C_arr_H != NULL)
-        free(C_arr_H);
-    if (C_arr_W != NULL)
-        free(C_arr_W);
     if (W_mat != NULL)
         freeMat(W_mat, n); 
     if (H_mat != NULL)
