@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "symnmf.h"
 
-/*create a n x d zero matrice*/
+/* create a n x d zero matrice */
 double** create_zero_mat(int n, int d){
     double **mat; 
     int i;
@@ -25,7 +25,7 @@ double** create_zero_mat(int n, int d){
     return mat;
 }
 
-/*free memory of matrice*/
+/* free memory of matrice */
 void freeMat(double **mat, int n){ 
     int i;
     for(i = 0; i < n; i++)
@@ -33,7 +33,7 @@ void freeMat(double **mat, int n){
     free(mat);
 }
 
-/*create the A-Simlarity matrice*/
+/* create and return the A matrix - Simlarity matrice */
 double** create_A_mat(double **points, int n, int d){    
     double **A_mat, value, sum;
     int i, j, k;
@@ -59,7 +59,7 @@ double** create_A_mat(double **points, int n, int d){
     return A_mat;
 }
 
-/*create the D-Diagonal Degree Matrix*/
+/* create and return the D matrix - Diagonal Degree Matrix */
 double** create_D_mat(double **A_mat, int n){
     double **D_mat, sum;
     int i ,j;
@@ -81,7 +81,7 @@ double** create_D_mat(double **A_mat, int n){
     return D_mat;
 }
 
-/*create the normalized D-Diagonal Degree Matrix (D^(-1/2))*/
+/* create and return the normalized D matrix - Diagonal Degree Matrix (D^(-1/2)) */
 double** D_mat_normalized(double **A_mat, int n){
     double **D_mat;
     int i;
@@ -99,8 +99,8 @@ double** D_mat_normalized(double **A_mat, int n){
     return D_mat;
 }
 
-/*fill C with the result of A*B where
-A is a n x m matrice, B is a m x d matrice and C is a n x d matrice*/ 
+/* fill C with the result of A*B where
+A is a n x m matrice, B is a m x d matrice and C is a n x d matrice */ 
 void mat_multipication(double **matA, double **matB, double **matC, int n, int m, int d){   
     double sum;
     int i, j, k;
@@ -114,8 +114,8 @@ void mat_multipication(double **matA, double **matB, double **matC, int n, int m
         }
 }
 
+/* create and return the W matrix - the normalized similarity matrix - W = D^(-1/2) * A * D^(-1/2) */
 double** create_W_mat(double **points, int n, int d){
-    /* return W - the normalized similarity matrix - W = D^(-1/2) * A * D^(-1/2) */
     double **A_mat, **D_mat;
     double **first_multipication, **second_multipication;
     
@@ -142,7 +142,7 @@ double** create_W_mat(double **points, int n, int d){
     return second_multipication;
 }
 
-/*prints a n x d matrice*/
+/* prints a n x d matrice */
 void printm(double **mat, int n, int d){
     int i,j;
     
@@ -153,7 +153,7 @@ void printm(double **mat, int n, int d){
     }
 }
 
-/*make matT be the transposed matrice of mat (which is a n x d matrice)*/
+/* parse matT such that matT is the transposed matrice of mat (which is a n x d matrice) */
 void transpose(double **mat, double **matT, int n, int d){
     int i,j;
     
@@ -162,7 +162,7 @@ void transpose(double **mat, double **matT, int n, int d){
             matT[j][i] = mat[i][j];
 }
 
-/*return frobenius norm of matrice*/
+/* return frobenius norm of matrice */
 double frobenius_norm(double **mat, int n, int k){
     int i, j;
     double norm = 0;
@@ -174,7 +174,7 @@ double frobenius_norm(double **mat, int n, int k){
     return norm;
 }
 
-/*creates a n x d matrice from the points in the file*/
+/* creates and returns a n x d matrice from the points in the file */
 double** get_points_input(FILE *ifp, int n, int d){
     int i, j;
     double **mat, point;
@@ -191,6 +191,7 @@ double** get_points_input(FILE *ifp, int n, int d){
     return mat;
 }
 
+/* return the updated H matrix */
 double** update_H_mat(double **matH, double **matW, int n, int k, double eps, int iter){
     double **new_H, **numerator_H, **denominator_H, **first_mult, **mat_H_T, **frobenius_mat, norm;
     int i, j;
@@ -205,7 +206,7 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
     denominator_H = create_zero_mat(n, k);
     mat_H_T = create_zero_mat(k, n);
 
-    /*at least one of the matrices failed to load correctly*/
+    /* at least one of the matrices failed to load correctly */
     if (numerator_H == NULL || mat_H_T == NULL || denominator_H == NULL
         || first_mult == NULL || new_H == NULL || frobenius_mat == NULL){
         if (numerator_H != NULL)
@@ -230,7 +231,7 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
         mat_multipication(mat_H_T, matH, first_mult, k, n, k);
         mat_multipication(matH, first_mult, denominator_H, n, k, k);
 
-        /*parse the new H and parse the frobenius mat (newH - oldH)*/
+        /* parse the new H mat and parse the frobenius mat (newH - oldH) */
         for (i = 0; i < n; i++)
             for (j = 0; j < k; j++){
                 new_H[i][j] = matH[i][j] * (0.5 + ((0.5*numerator_H[i][j]) / denominator_H[i][j]));
@@ -238,10 +239,10 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
             }
         norm = frobenius_norm(frobenius_mat, n, k);
         
-        if (iter == 0 || norm < eps)
+        if (iter <= 0 || norm < eps)
             break;
         
-        /*set matH to be the new_H*/
+        /* set matH to be the new_H */
         freeMat(matH, n);
         matH = new_H;
         new_H = create_zero_mat(n, k);
@@ -251,7 +252,7 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
         iter -= 1;
     }
     
-    /*free the matrices used for the operations*/
+    /* free the matrices used for the operations */
     freeMat(numerator_H, n);
     
     /*why isn't this working when uncommenting these lines????????*/
@@ -261,7 +262,7 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
     freeMat(denominator_H, n);
     freeMat(frobenius_mat, n);
     freeMat(new_H, n);
-    
+
     return matH;
 }
 
@@ -287,9 +288,10 @@ int main(int argc, char** argv){
             n += 1;
     }
     
-    rewind(stdin); /* reset pointer*/
+    /* reset pointer*/
+    rewind(stdin); 
 
-    /*load data-points from file into points n x d matrice*/
+    /* load data-points from file into points n x d matrice */
     points = get_points_input(ifp, n, d);
     if (points == NULL)
         return 1;

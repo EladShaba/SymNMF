@@ -62,15 +62,19 @@ double** Py_to_C_mat(PyObject *py_data, int n, int d){
     return C_mat;
 }
 
+/* create and return a Python A matrix */
 static PyObject* sym(PyObject *self, PyObject *args){
     PyObject *Py_points, *res;
     int n, d;
     double **points, **A_mat;
     
-    if (!PyArg_ParseTuple(args, "O|i|i", &Py_points, &n, &d))
+    if (!PyArg_ParseTuple(args, "O", &Py_points))
         return NULL;
     if (!PyList_Check(Py_points))
         return NULL;
+
+    n = PyList_Size(Py_points);
+    d = PyList_Size(PyList_GetItem(Py_points, 0));
     
     points = Py_to_C_mat(Py_points, n, d);
     A_mat = create_A_mat(points, n, d);
@@ -80,21 +84,25 @@ static PyObject* sym(PyObject *self, PyObject *args){
     if (A_mat != NULL)
         freeMat(A_mat, n);
     if (points != NULL)
-        freeMat(points,n); /*two matrices to free*/
+        freeMat(points,n);
     
     return res;
 }
 
+/* create and return a Python D matrix */
 static PyObject* ddg(PyObject *self, PyObject *args){
     PyObject *Py_points, *res;
-    int n,d;
+    int n, d;
     double **points, **A_mat, **D_mat;
     
-    if (!PyArg_ParseTuple(args, "O|i|i", &Py_points, &n, &d))
+    if (!PyArg_ParseTuple(args, "O", &Py_points))
         return NULL;
     if (!PyList_Check(Py_points))
         return NULL;
     
+    n = PyList_Size(Py_points);
+    d = PyList_Size(PyList_GetItem(Py_points, 0));
+
     points = Py_to_C_mat(Py_points, n, d);
     A_mat = create_A_mat(points, n,d);
     D_mat =create_D_mat(A_mat,n);
@@ -111,16 +119,20 @@ static PyObject* ddg(PyObject *self, PyObject *args){
     return res;
 }
 
+/* create and return a Python W matrix */
 static PyObject* norm(PyObject *self, PyObject *args){
     PyObject *Py_points, *res;
-    int n,d;
+    int n, d;
     double **points, **W_mat;
     
-    if (!PyArg_ParseTuple(args, "O|i|i", &Py_points, &n, &d))
+    if (!PyArg_ParseTuple(args, "O", &Py_points))
         return NULL;
     if (!PyList_Check(Py_points))
         return NULL;
     
+    n = PyList_Size(Py_points);
+    d = PyList_Size(PyList_GetItem(Py_points, 0));
+
     points = Py_to_C_mat(Py_points, n, d);
     W_mat = create_W_mat(points, n,d);
     res = C_to_Py_mat(W_mat, n, n);    
@@ -134,15 +146,18 @@ static PyObject* norm(PyObject *self, PyObject *args){
     return res;
 }
 
+/* return the updated Python H matrix */
 static PyObject* updateH(PyObject *self, PyObject *args){
     PyObject *Py_H, *Py_W, *res;
     int n, k, iter;
     double **H_mat, **W_mat, eps;
     
-    if (!PyArg_ParseTuple(args, "O|O|i|i|d|i", &Py_H, &Py_W, &n, &k, &eps, &iter))
+    if (!PyArg_ParseTuple(args, "O|O|i|d|i", &Py_H, &Py_W, &k, &eps, &iter))
         return NULL;
     if (!PyList_Check(Py_H) || !PyList_Check(Py_W))
         return NULL;
+
+    n = PyList_Size(Py_W);
 
     H_mat = Py_to_C_mat(Py_H, n, k);
     W_mat = Py_to_C_mat(Py_W, n, n);
