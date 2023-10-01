@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "symnmf.h"
 
 /* create a n x d zero matrice */
@@ -163,15 +164,19 @@ void transpose(double **mat, double **matT, int n, int d){
 }
 
 /* return frobenius norm of matrice */
-double frobenius_norm(double **mat, int n, int k){
-    int i, j;
-    double norm = 0;
-    
-    for(i = 0; i < n; i++)
-        for(j = 0; j < k; j++)
-            norm += pow(mat[i][j], 2);
-    
-    return norm;
+double frobenius_norm(double **matA,double **matB, int n, int k){
+   double dist =0.0;
+    int i,j;
+    for(i=0;i<n;i++)
+    {
+
+    for(j=0; j<k; j++)
+        {
+        dist += (matA[i][j]-matB[i][j])*(matA[i][j]-matB[i][j]);
+        }
+    }
+    return dist;
+
 }
 
 /* creates and returns a n x d matrice from the points in the file */
@@ -191,81 +196,51 @@ double** get_points_input(FILE *ifp, int n, int d){
     return mat;
 }
 
-/* return the updated H matrix */
-double** update_H_mat(double **matH, double **matW, int n, int k, double eps, int iter){
-    double **new_H, **numerator_H, **denominator_H, **first_mult, **mat_H_T, **frobenius_mat, norm;
-    int i, j;
-    
-    if (matH == NULL || matW == NULL)
-        return NULL;
-    
-    new_H = create_zero_mat(n, k);
-    frobenius_mat = create_zero_mat(n, k);
-    numerator_H = create_zero_mat(n, k);
-    first_mult = create_zero_mat(k, k);
-    denominator_H = create_zero_mat(n, k);
-    mat_H_T = create_zero_mat(k, n);
 
-    /* at least one of the matrices failed to load correctly */
-    if (numerator_H == NULL || mat_H_T == NULL || denominator_H == NULL
-        || first_mult == NULL || new_H == NULL || frobenius_mat == NULL){
-        if (numerator_H != NULL)
-            freeMat(numerator_H, n);
-        if (mat_H_T != NULL)
-            freeMat(mat_H_T, n);
-        if (first_mult != NULL)
-            freeMat(first_mult, n);
-        if (denominator_H != NULL)
-            freeMat(denominator_H, n);
-        if (new_H != NULL)
-            freeMat(new_H, n);
-        if (frobenius_mat != NULL)
-            freeMat(frobenius_mat, n);
-        return NULL;
+double **calcH(double** matH, double** matW, int n, int k){
+    int i,j;
+    double B = 0.5;
+    double **newH,** matWH,**matHH,**matHHH,**matHt;
+    newH=create_zero_mat(n,k);
+    matWH=create_zero_mat(n,k);
+    matHH=create_zero_mat(n,n);
+    matHHH=create_zero_mat(n,k);
+    matHt=create_zero_mat(k,n);
+    
+    mat_multipication(matW,matH,matWH,n,n,k);
+    transpose(matH,matHt,n,k);
+    mat_multipication(matH,matHt,matHH,n,k,n);
+    mat_multipication(matHH,matH,matHHH,n,n,k);
+   
+    for(i=0;i<n;i++)
+    {
+        for(j=0;j<k;j++){
+            newH[i][j] = matH[i][j]*(1 -B + B*(matWH[i][j]/matHHH[i][j]));
+        }
     }
 
-
-    while (1){
-        transpose(matH, mat_H_T, n, k);
-        mat_multipication(matW, matH, numerator_H, n, n, k);
-        mat_multipication(mat_H_T, matH, first_mult, k, n, k);
-        mat_multipication(matH, first_mult, denominator_H, n, k, k);
-
-        /* parse the new H mat and parse the frobenius mat (newH - oldH) */
-        for (i = 0; i < n; i++)
-            for (j = 0; j < k; j++){
-                new_H[i][j] = matH[i][j] * (0.5 + ((0.5*numerator_H[i][j]) / denominator_H[i][j]));
-                frobenius_mat[i][j] = new_H[i][j] - matH[i][j];
-            }
-        norm = frobenius_norm(frobenius_mat, n, k);
-        
-        if (iter <= 0 || norm < eps)
-            break;
-        
-        /* set matH to be the new_H */
-        freeMat(matH, n);
-        matH = new_H;
-        new_H = create_zero_mat(n, k);
-        if (new_H == NULL)
-            return NULL;
-        
-        iter -= 1;
-    }
-    
-    /* free the matrices used for the operations */
-    freeMat(numerator_H, n);
-    
-    /*why isn't this working when uncommenting these lines????????*/
-    //freeMat(mat_H_T, n);
-    //freeMat(first_mult, n);
-    
-    freeMat(denominator_H, n);
-    freeMat(frobenius_mat, n);
-    freeMat(new_H, n);
-
-    return matH;
+    freeMat(matWH,n);
+    freeMat(matHH,k);
+    freeMat(matHHH,n);
+    freeMat(matHt,k);
+    return newH;
 }
 
+/* return the updated H matrix */
+double** update_H_mat(double **matH, double **matW, int n, int k, double eps, int iter){
+    int count = 0;
+    double **newH;
+    double **copyH;
+    copyH =  matH;
+    newH=calcH(copyH,matW,n,k);
+    while( frobenius_norm(copyH,newH,n,k)>=0.0001 && count < 300){
+        copyH = newH;
+        newH = calcH(copyH,matW,n,k);
+        count++;
+    }
+    freeMat(copyH,n);
+    return newH;
+}
 
 int main(int argc, char** argv){
     /* if there are command-line arguments, they are interpered as filenames, and processed in order */

@@ -69,9 +69,9 @@ def get_symnmf(data_points, n, k, eps, max_iter):
         m = avg_mat_entries(W_mat, n)
         endpoint = 2 * math.sqrt(m / k)
         H_mat = np.random.uniform(0, endpoint, (n, k))
-        
         #calculate H^i until converge in C
         H_mat = symnmf.updateH(H_mat.tolist(), W_mat, k, eps, max_iter)
+        
         if None == H_mat:
             print("An Error Has Occurred")
             sys.exit(1)

@@ -12,9 +12,9 @@ void mat_multipication(double **matA, double **matB, double **matC, int n, int m
 double** create_W_mat(double **points, int n, int d);
 void printm(double **mat, int n, int d);
 void transpose(double **mat, double **matT, int n, int d);
-double frobenius_norm(double **mat, int n, int k);
+double frobenius_norm(double **matA,double **matB, int n, int k);
 double** get_points_input(FILE *ifp, int n, int d);
 double** update_H_mat(double **matH, double **matW, int n, int k, double epsilon, int iter);
-
+double **calcH(double** matH, double** matW, int n, int k);
 
 # endif
