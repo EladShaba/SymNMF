@@ -180,7 +180,7 @@ double frobenius_norm(double **matA,double **matB, int n, int k){
 }
 
 /* creates and returns a n x d matrice from the points in the file */
-double** get_points_input(FILE *ifp, int n, int d){
+double** get_points_input(FILE *filep, int n, int d){
     int i, j;
     double **mat, point;
 
@@ -190,7 +190,7 @@ double** get_points_input(FILE *ifp, int n, int d){
 
     for(i = 0; i < n; i++)
         for(j = 0; j < d; j++)
-            if (fscanf(ifp, "%lf", &point) != EOF)
+            if (fscanf(filep, "%lf", &point) != EOF)
                 mat[i][j] = point;
     
     return mat;
@@ -233,7 +233,7 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
     double **copyH;
     copyH =  matH;
     newH=calcH(copyH,matW,n,k);
-    while( frobenius_norm(copyH,newH,n,k)>=0.0001 && count < 300){
+    while( frobenius_norm(copyH,newH,n,k)>= eps && count < iter){
         copyH = newH;
         newH = calcH(copyH,matW,n,k);
         count++;
@@ -241,43 +241,73 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
     freeMat(copyH,n);
     return newH;
 }
+int get_dimention(FILE *filep){
+    /* a function that returns the dimention of the points */
+    char c;
+    int cnt;
+    cnt = 0;
+
+    while((c = getc(filep)) != '\n'){
+        if (c == ','){
+            cnt ++;
+        }
+    }
+    cnt ++;
+    fseek(filep, 0L, SEEK_SET);
+    rewind(filep);
+
+    return (cnt);
+}
+int get_points_num(FILE *filepoint){
+    /* a function that returns the number of points. each line in input file represents a points.
+    thus, we'll return the number of lines on input file. */
+    char c;
+    int cnt;
+    cnt = 0;
+     while( (c =getc(filepoint)) != EOF )
+    {
+        if(c == '\n')
+        {
+            cnt++;
+        }
+    }
+    fseek(filepoint, 0L, SEEK_SET);
+    rewind(filepoint);
+    return (cnt);
+}
 
 int main(int argc, char** argv){
     /* if there are command-line arguments, they are interpered as filenames, and processed in order */
-    FILE *ifp; 
+    FILE *filepoint; 
     int n = 0, d = 1;   
-    char *filename, charCount;
+    char *filename;
     double **points, **A_mat, **D_mat, **W_mat;
-
+    if(argc!=3)
+    {
+        printf("An Error Has Occurred");
+        return 1;
+    }
     filename = argv[2];
-    ifp = fopen(filename, "r");
-    if (ifp == NULL){
+    filepoint = fopen(filename, "r");
+    if (filepoint == NULL){
         printf("An Error Has Occurred");
         return 1;
     }
 
-    while ((charCount = getchar()) != EOF){
-        if (n == 0 && charCount == ',')
-            d += 1;
-        if (charCount == '\n')
-            n += 1;
-    }
-    
-    /* reset pointer*/
-    rewind(stdin); 
+    d = get_dimention(filepoint);
+    n = get_points_num(filepoint);
 
     /* load data-points from file into points n x d matrice */
-    points = get_points_input(ifp, n, d);
+    points = get_points_input(filepoint, n, d);
     if (points == NULL)
         return 1;
 
-    fclose(ifp);
+    fclose(filepoint);
 
     if (strcmp(argv[1], "sym") == 0){
         A_mat = create_A_mat(points, n, d);
         if (A_mat == NULL)
             return 1;
-        
         printm(A_mat, n, n);
         freeMat(A_mat, n);
     }

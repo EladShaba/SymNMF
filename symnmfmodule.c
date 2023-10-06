@@ -140,7 +140,7 @@ static PyObject* norm(PyObject *self, PyObject *args){
     /*free all memory*/
     if (W_mat != NULL)
         freeMat(W_mat, n); 
-    if (points != points)
+    if (points != NULL)
         freeMat(points, n);
     
     return res;
