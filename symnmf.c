@@ -4,6 +4,12 @@
 #include <string.h>
 #include "symnmf.h"
 
+/* struct for dots' matrix size (n x d)*/
+typedef struct dot_size{
+   int n;
+   int d;
+}SIZE;
+
 /* create a n x d zero matrice */
 double** create_zero_mat(int n, int d){
     double **mat; 
@@ -65,20 +71,22 @@ double** create_D_mat(double **A_mat, int n){
     double **D_mat, sum;
     int i ,j;
 
-    if (A_mat == NULL)
+    if (A_mat == NULL){
         return NULL;
-
+    }
     D_mat = create_zero_mat(n, n);
-    if (D_mat == NULL)
-        return NULL;
+    if (D_mat == NULL){
 
+    
+        return NULL;
+    }
     for (i = 0; i < n; i++){
         sum = 0.0;
         for (j = 0; j < n; j++)
             sum += A_mat[i][j];
         D_mat[i][i] = sum;
     }
-
+    
     return D_mat;
 }
 
@@ -179,22 +187,6 @@ double frobenius_norm(double **matA,double **matB, int n, int k){
 
 }
 
-/* creates and returns a n x d matrice from the points in the file */
-double** get_points_input(FILE *filep, int n, int d){
-    int i, j;
-    double **mat, point;
-
-    mat = create_zero_mat(n,d);
-    if (mat == NULL)
-        return NULL;
-
-    for(i = 0; i < n; i++)
-        for(j = 0; j < d; j++)
-            if (fscanf(filep, "%lf", &point) != EOF)
-                mat[i][j] = point;
-    
-    return mat;
-}
 
 
 double **calcH(double** matH, double** matW, int n, int k){
@@ -241,68 +233,84 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
     freeMat(copyH,n);
     return newH;
 }
-int get_dimention(FILE *filep){
-    /* a function that returns the dimention of the points */
-    char c;
-    int cnt;
-    cnt = 0;
+/* reading the file */
+SIZE* reading_file(char* file_name, double*** dots){
+    FILE *f = fopen(file_name,"r");
+    int d = 0;
+    int i,j;
+    int row = 0;
+    int col = 0;
+    char c = 0;
+    double num = 0;
+    SIZE *ds = malloc(sizeof(SIZE));
+    if (NULL == ds) { /* malloc check */
+        return NULL;
+    }
 
-    while((c = getc(filep)) != '\n'){
-        if (c == ','){
-            cnt ++;
+    /* reading the file the 1st time to calculate n and d*/
+    while (fscanf(f,"%lf",&num)!= EOF){
+        c = fgetc(f); /* reading the char after the number */
+        if(EOF != c){
+            /* same point */
+            if(',' == c){
+                col++;
+            }
+            else if ('\n' == c){
+                row++;
+                d = col;
+                col = 0;
+            }
         }
     }
-    cnt ++;
-    fseek(filep, 0L, SEEK_SET);
-    rewind(filep);
-
-    return (cnt);
-}
-int get_points_num(FILE *filepoint){
-    /* a function that returns the number of points. each line in input file represents a points.
-    thus, we'll return the number of lines on input file. */
-    char c;
-    int cnt;
-    cnt = 0;
-     while( (c =getc(filepoint)) != EOF )
-    {
-        if(c == '\n')
-        {
-            cnt++;
+    d++;
+    ds->n = row;
+    ds->d = d;
+    
+    /* reading the file the 2nd time enter dots to the array*/
+    *dots = malloc(row * sizeof(double*));
+    if (NULL == *dots) { /* malloc check */
+        return NULL;
+    }
+    fseek(f, 0, SEEK_SET); /* return to the start of the file*/
+    for(i = 0; i < row; i++){
+        (*dots)[i] = malloc(d*sizeof(double)); 
+        if (NULL == (*dots)[i]) { /* malloc check */
+            return NULL;
+        }
+        for(j = 0; j < d; j++){
+            if(fscanf(f,"%lf",&num)!= EOF){
+                (*dots)[i][j] = num;
+            }
+            c = fgetc(f);
         }
     }
-    fseek(filepoint, 0L, SEEK_SET);
-    rewind(filepoint);
-    return (cnt);
-}
 
+    fclose(f);
+    return ds; /* return row = number of dots */
+}
 int main(int argc, char** argv){
     /* if there are command-line arguments, they are interpered as filenames, and processed in order */
-    FILE *filepoint; 
-    int n = 0, d = 1;   
+    SIZE *ds=NULL;
+    int n, d;   
     char *filename;
+    
     double **points, **A_mat, **D_mat, **W_mat;
-    if(argc!=3)
+    if(argc != 3)
     {
         printf("An Error Has Occurred");
         return 1;
     }
+   /* reading the file and calculate n and d */
+    
     filename = argv[2];
-    filepoint = fopen(filename, "r");
-    if (filepoint == NULL){
-        printf("An Error Has Occurred");
+    ds = reading_file(filename, &points);
+    if (NULL == ds) {
+        puts("An Error Has Occurred");
         return 1;
     }
-
-    d = get_dimention(filepoint);
-    n = get_points_num(filepoint);
-
-    /* load data-points from file into points n x d matrice */
-    points = get_points_input(filepoint, n, d);
-    if (points == NULL)
-        return 1;
-
-    fclose(filepoint);
+    n = ds->n;
+    d = ds->d;
+    free(ds);
 
     if (strcmp(argv[1], "sym") == 0){
         A_mat = create_A_mat(points, n, d);
@@ -313,11 +321,15 @@ int main(int argc, char** argv){
     }
 
     if (strcmp(argv[1], "ddg") == 0){
-        D_mat = create_D_mat(points, n);
+        A_mat = create_A_mat(points, n, d);
+        if (A_mat == NULL)
+            return 1;
+        D_mat = create_D_mat(A_mat, n);
         if (D_mat == NULL)
             return 1;
         
         printm(D_mat, n, n);
+        freeMat(A_mat, n);
         freeMat(D_mat, n);
     }
 
