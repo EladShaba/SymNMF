@@ -39,7 +39,7 @@ def minDistCluster(dataPoint, clusterLst):
 # returns true if the distance between the previous centroid and the new centroid is less than epsilon for all centroids 
 def deltaCentroids(clusterLst, prevCentroidsLst):
     for i in range(len(clusterLst)):
-        if clusterLst[i].distance(prevCentroidsLst[i]) >= 0.001:
+        if clusterLst[i].distance(prevCentroidsLst[i]) >= 0.0001:
             return False
 
     return True
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         sys.exit(1)
     else:
         k = int(sys.argv[1])
-        iter = 200
+        iter = 300
         fileName = sys.argv[2]
 
     # Open the file in read mode
