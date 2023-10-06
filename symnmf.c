@@ -4,11 +4,8 @@
 #include <string.h>
 #include "symnmf.h"
 
-/* struct for dots' matrix size (n x d)*/
-typedef struct dot_size{
-   int n;
-   int d;
-}SIZE;
+
+
 
 /* create a n x d zero matrice */
 double** create_zero_mat(int n, int d){
@@ -233,67 +230,77 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
     freeMat(copyH,n);
     return newH;
 }
-/* reading the file */
-SIZE* reading_file(char* file_name, double*** dots){
-    FILE *f = fopen(file_name,"r");
-    int d = 0;
-    int i,j;
-    int row = 0;
-    int col = 0;
-    char c = 0;
-    double num = 0;
-    SIZE *ds = malloc(sizeof(SIZE));
-    if (NULL == ds) { /* malloc check */
-        return NULL;
-    }
+/* reading the file*/
 
-    /* reading the file the 1st time to calculate n and d*/
-    while (fscanf(f,"%lf",&num)!= EOF){
-        c = fgetc(f); /* reading the char after the number */
-        if(EOF != c){
-            /* same point */
-            if(',' == c){
-                col++;
-            }
-            else if ('\n' == c){
-                row++;
-                d = col;
-                col = 0;
-            }
-        }
-    }
-    d++;
-    ds->n = row;
-    ds->d = d;
+int get_n(FILE *fp)
+{
     
-    /* reading the file the 2nd time enter dots to the array*/
-    *dots = malloc(row * sizeof(double*));
-    if (NULL == *dots) { /* malloc check */
+    char c;
+    int cnt = 0;
+
+     while( (c = getc(fp)) !=  EOF )
+    {
+        if(c == '\n'){
+            cnt++;
+        }
+    }
+    fseek(fp, 0L, SEEK_SET);
+    rewind(fp);
+    return (cnt);
+}
+int get_d(FILE *fp){
+    char c;
+    int cnt=0;
+    while((c = getc(fp))!='\n')
+    {
+        if (c == ',')
+        {
+            cnt ++;
+        }
+    }
+    cnt ++;
+    fseek(fp, 0L, SEEK_SET);
+    rewind(fp);
+    return (cnt);
+}
+
+void read_points_file(FILE *fp, double* points)
+{
+    /* reads the points from the file and save them in a given array */
+    double point = (double) 0;
+    int i = 0;
+    while (fscanf(fp, "%lf,", &point) != EOF)
+    {
+        points[i] = point;
+        i++;
+    }
+}
+
+double** arrToMat(double *arr, int n, int d) /*convert 1d array into nxd matrice*/
+{
+    int i,j;
+    double **mat;
+    mat = create_zero_mat(n,d);
+    if (NULL == mat){
+        printf("An Error Has Occurred");
         return NULL;
     }
-    fseek(f, 0, SEEK_SET); /* return to the start of the file*/
-    for(i = 0; i < row; i++){
-        (*dots)[i] = malloc(d*sizeof(double)); 
-        if (NULL == (*dots)[i]) { /* malloc check */
-            return NULL;
-        }
-        for(j = 0; j < d; j++){
-            if(fscanf(f,"%lf",&num)!= EOF){
-                (*dots)[i][j] = num;
-            }
-            c = fgetc(f);
+    for(i = 0; i < n ;i++)
+    {
+        for(j = 0; j < d; j++)
+        {
+            mat[i][j] = arr[i * d + j];
         }
     }
-
-    fclose(f);
-    return ds; /* return row = number of dots */
+    return mat;
 }
+
 int main(int argc, char** argv){
     /* if there are command-line arguments, they are interpered as filenames, and processed in order */
-    SIZE *ds=NULL;
+    FILE *fp;
     int n, d;   
     char *filename;
-    
+    double *p_arr;
     double **points, **A_mat, **D_mat, **W_mat;
     if(argc != 3)
     {
@@ -303,14 +310,29 @@ int main(int argc, char** argv){
    /* reading the file and calculate n and d */
     
     filename = argv[2];
-    ds = reading_file(filename, &points);
-    if (NULL == ds) {
-        puts("An Error Has Occurred");
+    fp = fopen(filename,"r");
+    if (NULL == fp){
+        printf("An Error Has Occurred");
         return 1;
     }
-    n = ds->n;
-    d = ds->d;
-    free(ds);
+    /* saving the points in a 1-D array */
+    d = get_d(fp);
+    n = get_n(fp);
+    p_arr = calloc(n*d, sizeof(double));
+    if (p_arr == NULL){
+        printf("An Error Has Occurred");
+        return 1;
+    }
+    read_points_file(fp,p_arr);
+    fclose(fp);
+
+    points = arrToMat(p_arr,n,d);
+ 
+    if (points == NULL){
+        printf("An Error Has Occurred");
+        return 1;
+    }
+    
 
     if (strcmp(argv[1], "sym") == 0){
         A_mat = create_A_mat(points, n, d);

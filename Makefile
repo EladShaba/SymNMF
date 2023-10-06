@@ -1,7 +1,7 @@
 # Compiler and flags
-CC = gcc
-CFLAGS = -ansi -Wall -Wextra -Werror -g -pedantic-errors
-LDFLAGS = -lm
+C = gcc
+FLAG = -ansi -Wall -Wextra -Werror -g -pedantic-errors
+LF = -lm
 
 C_FILES= symnmf.c
 
@@ -10,7 +10,5 @@ C_FILES= symnmf.c
 all: symnmf
 
 symnmf:
-	$(CC) $(CFLAGS) -o symnmf $(C_FILES) $(LDFLAGS)
+	$(C) $(FLAG) -o symnmf $(C_FILES) $(LF)
 
-clean:
-	rm -f symnmf
