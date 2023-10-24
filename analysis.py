@@ -7,14 +7,13 @@ import symnmfmod as symnmf
 import math
 
 
-
 # calculate average element of matrice, used to initiliaze H
 def avg_mat_entries(mat,n):
-    m=0.0
+    m = 0.0
     for i in range(n):
         for j in range(n):
-            m+=mat[i][j]
-    m = m/(n*n)
+            m += mat[i][j]
+    m = m / (n*n)
     return m
 
 
@@ -41,7 +40,7 @@ def getSymnmf(data_points, n, k, eps, max_iter):
 
 
 # predicts the labels for the datapoints given an H matrix
-def predict(dataPoints, H_mat):
+def predict(H_mat):
     labels = []
     for i in range(len(H_mat)):
         labels.append(H_mat[i].index(max(H_mat[i])))
@@ -75,7 +74,7 @@ if __name__ == "__main__":
     clusterLst = kmeansHW1.fit(file_name, k, max_iter)
     K_labels = kmeansHW1.predict(data_points, clusterLst)
     H_mat = getSymnmf(data_points, n, k, eps, max_iter)
-    H_labels = predict(data_points, H_mat)
+    H_labels = predict(H_mat)
 
     # Calculate the silhouette scores
     silhouette_score_symnmf = silhouette_score(data_points, H_labels)

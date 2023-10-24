@@ -9,24 +9,19 @@ PyObject* C_to_Py_mat(double **c_mat, int n, int d){
     PyObject *py_matrice, *row;
     int i, j;
     
-    if (c_mat == NULL){
-        printf("problem with c mat\n");
+    if (c_mat == NULL)
         return NULL;
-    }
 
     /*parse a n x d C matrice to a n x d python matrice*/
     py_matrice = PyList_New(n); 
-    if (py_matrice == NULL){
-        printf("problem in creating python list 1\n");
+    if (py_matrice == NULL)
         return NULL;
-    }
 
     for (i = 0; i < n; i++){
         row = PyList_New(d);
-        if (row == NULL){
-            printf("problem in creating python list 2\n");
+        if (row == NULL)
             return NULL;
-        }
+
         for (j = 0; j < d; j++)
             PyList_SetItem(row, j, PyFloat_FromDouble(c_mat[i][j]));
         PyList_SetItem(py_matrice, i, row);
@@ -43,17 +38,14 @@ double** Py_to_C_mat(PyObject *py_data, int n, int d){
 
     /*parse a n x d python matrice to a n x d C matrice*/ 
     C_mat = malloc(n * sizeof(double*));
-    if (C_mat == NULL){
-        printf("problem in creating c list 1\n");
+    if (C_mat == NULL)
         return NULL;
-    }
 
     for (i = 0; i < n; i++) {
         C_mat[i] = malloc(d * sizeof(double));
-        if (C_mat[i] == NULL){
-            printf("problem in creating c list 2\n");
+        if (C_mat[i] == NULL)
             return NULL;
-        }
+
         py_row = PyList_GetItem(py_data, i);
         for (j = 0; j < d; j++)
             C_mat[i][j] = PyFloat_AsDouble(PyList_GetItem(py_row, j));
@@ -77,14 +69,19 @@ static PyObject* sym(PyObject *self, PyObject *args){
     d = PyList_Size(PyList_GetItem(Py_points, 0));
     
     points = Py_to_C_mat(Py_points, n, d);
+    if (points == NULL)
+        return NULL;
+    
     A_mat = create_A_mat(points, n, d);
+    if (A_mat == NULL){
+        freeMat(points, n);
+        return NULL;
+    }
     res = C_to_Py_mat(A_mat, n, n);
     
     /*free all memory*/
-    if (A_mat != NULL)
-        freeMat(A_mat, n);
-    if (points != NULL)
-        freeMat(points,n);
+    freeMat(A_mat, n);
+    freeMat(points, n);
     
     return res;
 }
@@ -104,17 +101,20 @@ static PyObject* ddg(PyObject *self, PyObject *args){
     d = PyList_Size(PyList_GetItem(Py_points, 0));
 
     points = Py_to_C_mat(Py_points, n, d);
-    A_mat = create_A_mat(points, n,d);
-    D_mat =create_D_mat(A_mat,n);
+    if (points == NULL)
+        return NULL;
+    
+    D_mat = create_D_mat(points, n, d);
+    if (D_mat == NULL){
+        freeMat(points, n);
+        return NULL;
+    }
+
     res = C_to_Py_mat(D_mat, n, n);
     
     /*free all memory*/
-    if (A_mat != NULL)
-        freeMat(A_mat, n);
-    if (D_mat != NULL)
-        freeMat(D_mat, n);
-    if (points != NULL)
-        freeMat(points,n);
+    freeMat(D_mat, n);
+    freeMat(points, n);
     
     return res;
 }
@@ -134,14 +134,20 @@ static PyObject* norm(PyObject *self, PyObject *args){
     d = PyList_Size(PyList_GetItem(Py_points, 0));
 
     points = Py_to_C_mat(Py_points, n, d);
-    W_mat = create_W_mat(points, n,d);
+    if (points == NULL)
+        return NULL;
+    
+    W_mat = create_W_mat(points, n, d);
+    if (W_mat == NULL){
+        freeMat(points, n);
+        return NULL;
+    }
+
     res = C_to_Py_mat(W_mat, n, n);    
     
     /*free all memory*/
-    if (W_mat != NULL)
-        freeMat(W_mat, n); 
-    if (points != NULL)
-        freeMat(points, n);
+    freeMat(W_mat, n); 
+    freeMat(points, n);
     
     return res;
 }
@@ -160,15 +166,21 @@ static PyObject* updateH(PyObject *self, PyObject *args){
     n = PyList_Size(Py_W);
 
     H_mat = Py_to_C_mat(Py_H, n, k);
+    if (H_mat == NULL)
+        return NULL;
+    
     W_mat = Py_to_C_mat(Py_W, n, n);
+    if (W_mat == NULL){
+        freeMat(H_mat, n);
+        return NULL;
+    }
+
     H_mat = update_H_mat(H_mat, W_mat, n, k, eps, iter);
     res = C_to_Py_mat(H_mat, n, k);
 
     /*free all memory*/
-    if (W_mat != NULL)
-        freeMat(W_mat, n); 
-    if (H_mat != NULL)
-        freeMat(H_mat, n);
+    freeMat(W_mat, n); 
+    freeMat(H_mat, n);
     
     return res;
 }
