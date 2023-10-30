@@ -266,7 +266,7 @@ double** update_H_mat(double **matH, double **matW, int n, int k, double eps, in
 /* returns the number of rows and columns where res[0] contains the number of rows and res[1] contains the number of columns */
 int* getDimensions(char* file_name){
     FILE *fileData = fopen(file_name, "r");
-    int rownum = 0, colnum = 0, *res = malloc(2 * sizeof(int)), dim;
+    int rownum = 0, colnum = 0, *res = malloc(2 * sizeof(int)), dim = 0;
     char c = 0;
     double num = 0;
 
@@ -299,7 +299,6 @@ int* getDimensions(char* file_name){
 double** getPoints(char* file_name, int n, int d){
     FILE *fileData = fopen(file_name, "r");
     int i, j;
-    char c = 0;
     double num = 0, **points;
     
     points = (double**) calloc(n, sizeof(double*));
@@ -315,7 +314,7 @@ double** getPoints(char* file_name, int n, int d){
         for(j = 0; j < d; j++){
             if(fscanf(fileData,"%lf",&num)!= EOF)
                 points[i][j] = num;
-            c = fgetc(fileData);
+            fgetc(fileData);
         }
     }
 
