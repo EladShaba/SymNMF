@@ -90,7 +90,7 @@ static PyObject* sym(PyObject *self, PyObject *args){
 static PyObject* ddg(PyObject *self, PyObject *args){
     PyObject *Py_points, *res;
     int n, d;
-    double **points, **A_mat, **D_mat;
+    double **points, **D_mat;
     
     if (!PyArg_ParseTuple(args, "O", &Py_points))
         return NULL;
